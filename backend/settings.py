@@ -37,6 +37,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
+    'tasks'
 ]
 
 MIDDLEWARE = [
@@ -78,7 +80,7 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'task_manager_db',
         'USER': 'task_user',
-        'PASSWORD': config('DB_PASSWORD'),
+        'PASSWORD': 'qwerty12345',
         'HOST': 'localhost',
         'PORT': '5432',
     }
