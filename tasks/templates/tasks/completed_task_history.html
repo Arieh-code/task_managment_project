@@ -8,9 +8,9 @@
     <h1>Completed Task History</h1>
     <ul>
       {% for entry in history %}
-      <li>{{ entry.month|date:"F Y" }}: {{ entry.count }} completed tasks</li>
+      <li>{{ entry.month }}: {{ entry.count }} tasks completed</li>
       {% empty %}
-      <li>No completed tasks yet.</li>
+      <li>No completed tasks found.</li>
       {% endfor %}
     </ul>
     <a href="{% url 'task_list' %}">Back to Task List</a>

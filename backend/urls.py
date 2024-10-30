@@ -17,9 +17,18 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
+
+# Redirect view for the root URL
+def home_redirect(request):
+    if request.user.is_authenticated:
+        return redirect('task_list')
+    else:
+        return redirect('account_login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', lambda request: redirect('task_list')),
-    path('tasks/', include('tasks.urls'))
+    path('', home_redirect, name='home'),
+    path('tasks/', include('tasks.urls')),
+    path('accounts/', include('allauth.urls')),
 ]

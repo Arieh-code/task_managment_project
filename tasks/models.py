@@ -1,10 +1,12 @@
 from django.db import models
 from django.utils import timezone
+from django.conf import settings
 
 # Create your models here.
 
 
 class Task(models.Model):
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     title = models.CharField(max_length=200)  # Title of the task, max length 200 characters
     description = models.TextField(blank=True, null=True)  # Optional description of the task
     completed = models.BooleanField(default=False)  # Boolean flag indicating if the task is completed
@@ -16,7 +18,7 @@ class Task(models.Model):
 
 
 class CompletedTaskHistory(models.Model):
-    task = models.ForeignKey(Task, on_delete=models.CASCADE)  # Link to the Task model
+    task = models.ForeignKey(Task, on_delete=models.SET_NULL, null=True)  # Link to the Task model
     completed_date = models.DateTimeField(default=timezone.now) # Timestamp for when the task was
     
     
