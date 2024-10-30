@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # Create your models here.
 
@@ -12,3 +13,13 @@ class Task(models.Model):
 
     def __str__(self):
         return self.title  # This returns the title of the task when you print the Task object
+
+
+class CompletedTaskHistory(models.Model):
+    task = models.ForeignKey(Task, on_delete=models.CASCADE)  # Link to the Task model
+    completed_date = models.DateTimeField(default=timezone.now) # Timestamp for when the task was
+    
+    
+    def __str__(self):
+        return f"completed: {self.task.title} on {self.completed_date}"
+    

@@ -1,0 +1,27 @@
+<!-- templates/tasks/task_list.html -->
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Task List</title>
+  </head>
+  <body>
+    <h1>Tasks</h1>
+    <a href="{% url 'task_create' %}">Create New Task</a>
+    <br />
+    <a href="{% url 'completed_task_history' %}">View Completed Task History</a>
+    <ul>
+      {% for task in tasks %}
+      <li>
+        <strong>{{ task.title }}</strong> - {{ task.description }}
+        <!--This is an html comment to sort formatting-->
+        {% if task.completed %}✔{% else %}✖{% endif %}
+        <a href="{% url 'task_update' task.pk %}">Edit</a>
+        <a href="{% url 'task_delete' task.pk %}">Delete</a>
+      </li>
+      {% empty %}
+      <li>No tasks available.</li>
+      {% endfor %}
+    </ul>
+  </body>
+</html>
