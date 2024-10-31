@@ -180,7 +180,7 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
+        'file_app': {
             'level': 'DEBUG',
             'class': 'logging.handlers.RotatingFileHandler',
             'filename': os.path.join(BASE_DIR, 'logs', 'app_info.log'),
@@ -188,26 +188,42 @@ LOGGING = {
             'backupCount': 5,  # Keep 5 backup files
             'formatter': 'verbose',  # Use the custom formatter
         },
+        'file_db': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'db.log'),
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
+        'file_autoreload': {
+            'level': 'WARNING',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'autoreload.log'),
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
+            'handlers': ['file_app'],
             'level': 'DEBUG',
             'propagate': False,
         },
         'tasks': {  # Custom logger for your tasks app
-            'handlers': ['file'],
+            'handlers': ['file_app'],
             'level': 'DEBUG',
             'propagate': False,
         },
         
         'django.utils.autoreload':{
-            'handler': ['file'],
+            'handler': ['file_autoreload'],
             'level': 'WARNING',
             'propagate': False,
         },
         'django.db.backends':{
-            'handlers': ['file'],
+            'handlers': ['file_db'],
             'level': 'WARNING',
             'propagate': False,
         }
