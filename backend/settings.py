@@ -12,6 +12,9 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 
 from pathlib import Path
 from decouple import config
+import os
+import logging
+import logging.handlers
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -169,27 +172,44 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
+    'formatters': {
+        'verbose': {  # Formatter with date, time, and message details
+            'format': '{asctime} [{levelname}] {name} - {message}',
+            'style': '{',
+            'datefmt': '%Y-%m-%d %H:%M:%S',
         },
+    },
+    'handlers': {
         'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': BASE_DIR / 'logs/app_info.log',  # This file will store info-level logs
+            'level': 'DEBUG',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'app_info.log'),
+            'maxBytes': 5 * 1024 * 1024,  # Rotate after 5 MB
+            'backupCount': 5,  # Keep 5 backup files
+            'formatter': 'verbose',  # Use the custom formatter
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['console', 'file'],
+            'handlers': ['file'],
             'level': 'DEBUG',
-            'propagate': True,
-        },
-        'tasks': {  # Logger for the tasks app
-            'handlers': ['console', 'file'],
-            'level': 'INFO',
             'propagate': False,
         },
+        'tasks': {  # Custom logger for your tasks app
+            'handlers': ['file'],
+            'level': 'DEBUG',
+            'propagate': False,
+        },
+        
+        'django.utils.autoreload':{
+            'handler': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
+        },
+        'django.db.backends':{
+            'handlers': ['file'],
+            'level': 'WARNING',
+            'propagate': False,
+        }
     },
 }
