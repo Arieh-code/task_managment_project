@@ -11,14 +11,39 @@
     <a href="{% url 'task_create' %}">Create New Task</a>
     <br />
     <a href="{% url 'completed_task_history' %}">View Completed Task History</a>
+      <!-- Filter and Sort Options -->
+      <form method="get" action="{% url 'task_list' %}">
+        <label for="importance">Filter by Priotiry:</label>
+        <select name="importance" id="importance">
+          <option value="">All</option>
+          <option value="Low" {% if filter_importance == "Low" %}selected{% endif %}>Low</option>
+          <option value="Medium" {% if filter_importance == "Medium" %}selected{% endif %}>Medium</option>
+          <option value="Urgent" {% if filter_importance == "Urgent" %}selected{% endif %}>Urgent</option>
+        </select>
+  
+        <label for="sort">Sort by:</label>
+        <select name="sort" id="sort">
+          <option value="">None</option>
+          <option value="end_date" {% if sort_by == "end_date" %}selected{% endif %}>End Date</option>
+          <option value="importance" {% if sort_by == "importance" %}selected{% endif %}>Priority</option>
+        </select>
+  
+        <button type="submit">Apply</button>
+      </form>
     <ul>
       {% for task in tasks %}
       <li>
-        <strong>{{ task.title }}</strong> - {{ task.description }}
+        <strong>{{ task.title }}</strong> - {{ task.description }} <br />
+        <!--This is an html comment to sort formatting-->
+        Priority: {{ task.get_importance_display }}<br />
+        <!-- Display human-readable importance level -->
+        End Date: {{ task.end_date|date:"Y-m-d" }}<br />
+        <!-- Display the end date in Y-m-d format -->
         <!--This is an html comment to sort formatting-->
         {% if task.completed %}✔{% else %}✖{% endif %}
         <a href="{% url 'task_update' task.pk %}">Edit</a>
         <a href="{% url 'task_delete' task.pk %}">Delete</a>
+        <br />
       </li>
       {% empty %}
       <li>No tasks available.</li>

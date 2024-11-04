@@ -3,9 +3,10 @@ from django.http import HttpResponse
 from .models import Task, CompletedTaskHistory
 from .forms import TaskForm 
 from django.utils import timezone
-from django.db.models import Count
+from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
 from django.contrib.auth.decorators import login_required
+from datetime import datetime
 import logging
 
 logger = logging.getLogger('tasks')
@@ -18,8 +19,26 @@ logger = logging.getLogger('tasks')
 
 @login_required
 def task_list(request):
-    tasks = Task.objects.filter(user=request.user)
-    return render(request, 'tasks/task_list.html', {'tasks': tasks})
+    tasks = get_user_task(request.user).filter(completed=False)
+    filter_importance = request.GET.get('importance')
+    sort_by = request.GET.get('sort')
+    
+    if filter_importance:
+        tasks = tasks.filter(importance=filter_importance)
+        
+    if sort_by == 'end_date':
+        tasks = tasks.order_by('end_date')
+    elif sort_by == 'importance':
+        tasks = tasks.order_by('-importance')
+        
+    return render(request, 'tasks/task_list.html', 
+                  {'tasks': tasks,
+                   'filter_importance': filter_importance,
+                   'sort_by': sort_by,
+                   })
+
+
+
 
 @login_required
 def task_create(request):
@@ -44,7 +63,7 @@ def task_create(request):
     
 @login_required
 def task_update(request, pk):
-    task = get_object_or_404(Task, pk=pk, user=request.user)
+    task = get_user_task(request.user, pk=pk)
     previous_completed_status = task.completed
     if request.method == 'POST':
         form = TaskForm(request.POST, instance=task)
@@ -79,7 +98,7 @@ def task_update(request, pk):
 
 @login_required  # Ensure that the user is logged in
 def task_delete(request, pk):
-    task = get_object_or_404(Task, pk=pk, user=request.user)  # Ensure the task belongs to the current user
+    task = get_user_task(request.user, pk=pk)  # Ensure the task belongs to the current user
     if request.method == 'POST':
         task.delete()
         logger.info(f"Task '{task.title}' (ID: {pk}) deleted by user '{request.user.username}'.")
@@ -91,12 +110,46 @@ def task_delete(request, pk):
 
 @login_required
 def completed_task_history(request):
-    history = (
-        CompletedTaskHistory.objects
-        .filter(task__user=request.user)  # Make sure this filter is present
-        .annotate(month=TruncMonth('completed_date'))
-        .values('month')
-        .annotate(count=Count('id'))
-        .order_by('month')
+    month = int(request.GET.get('month', timezone.now().month))
+    year = int(request.GET.get('year', timezone.now().year))
+    importance = request.GET.get('importance', '')
+    
+    # filter the completed task history for the selected month
+    completed_tasks = CompletedTaskHistory.objects.filter(
+        task__user = request.user,
+        completed_date__year = year,
+        completed_date__month = month,
+    ).annotate(
+        title = F('task__title'),
+        description = F('task__description'),
+        importance = F('task__importance'),
+
     )
-    return render(request, 'tasks/completed_task_history.html', {'history': history})
+    
+    if importance:
+        completed_tasks = completed_tasks.filter(task__importance=importance)
+    
+    importance_order = {'Urgent':1, 'Medium':2, 'Easy':3}
+    
+    completed_tasks = sorted(
+        completed_tasks, 
+        key= lambda x: importance_order.get(x.importance, 4)
+        )
+    
+    months = [(i, datetime(2024, i, 1).strftime('%B')) for i in range(1, 13)]
+    years = range(timezone.now().year-5, timezone.now().year+1)
+    
+    return render(request, 'tasks/completed_task_history.html', {
+        'completed_tasks' : completed_tasks,
+        'months' : months,
+        'years' : years,
+        'selected_month' : month,
+        'selected_year': year,
+        'importance_levels' : ['Urgent', 'Medium', 'Low'],
+        'importance' : importance
+        })
+
+def get_user_task(user, pk=None):
+    if pk:
+        return get_object_or_404(Task, pk=pk, user=user)
+    return Task.objects.filter(user=user)
