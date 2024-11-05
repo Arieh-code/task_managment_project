@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
+from datetime import timedelta
 from pathlib import Path
 from decouple import config
 import os
@@ -55,6 +56,25 @@ INSTALLED_APPS = [
     'rest_framework',
     'tasks'
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    ),
+}
+
+# JWT settings for access and refresh tokens
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+    'ROTATE_REFRESH_TOKENS': False,
+    'BLACKLIST_AFTER_ROTATION': True,
+    'UPDATE_LAST_LOGIN': True,
+}
+
 
 AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',  # Default backend
@@ -204,6 +224,14 @@ LOGGING = {
             'backupCount': 5,
             'formatter': 'verbose',
         },
+        'file_api': {
+            'level': 'INFO',
+            'class': 'logging.handlers.RotatingFileHandler',
+            'filename': os.path.join(BASE_DIR, 'logs', 'api.log'),
+            'maxBytes': 5 * 1024 * 1024,
+            'backupCount': 5,
+            'formatter': 'verbose',
+        }
     },
     'loggers': {
         'django': {
@@ -218,7 +246,7 @@ LOGGING = {
         },
         
         'django.utils.autoreload':{
-            'handler': ['file_autoreload'],
+            'handlers': ['file_autoreload'],
             'level': 'WARNING',
             'propagate': False,
         },
@@ -226,6 +254,12 @@ LOGGING = {
             'handlers': ['file_db'],
             'level': 'WARNING',
             'propagate': False,
+        },
+        'api':{
+            'handlers': ['file_api'],
+            'level': 'INFO',
+            'propagate': False,
+            
         }
     },
 }
