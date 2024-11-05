@@ -110,6 +110,7 @@ def task_delete(request, pk):
 
 @login_required
 def completed_task_history(request):
+    selected_importance = request.GET.get('importance', '')
     month = int(request.GET.get('month', timezone.now().month))
     year = int(request.GET.get('year', timezone.now().year))
     importance = request.GET.get('importance', '')
@@ -146,7 +147,8 @@ def completed_task_history(request):
         'selected_month' : month,
         'selected_year': year,
         'importance_levels' : ['Urgent', 'Medium', 'Low'],
-        'importance' : importance
+        'importance' : importance, 
+        'selected_importance' : selected_importance
         })
 
 def get_user_task(user, pk=None):

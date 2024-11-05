@@ -31,6 +31,10 @@ class Task(models.Model):
     
     
     def save(self, *args, **kwargs):
+        # Check if task completion status has changed
+        
+        creating_history = not self.pk or (Task.objects.filter(pk=self.pk).first().completed != self.completed)
+
         # automatically set end date based on the importance if not specified
         if not self.end_date:
             if self.importance == 'Low':
@@ -45,7 +49,9 @@ class Task(models.Model):
         
         logger.info(f"Saving task '{self.title}' with end date set to: {self.end_date}")
         super().save(*args, **kwargs)
-
+         # If completion status changed to True, create history
+        if creating_history and self.completed:
+            CompletedTaskHistory.objects.get_or_create(task=self, completed_date=timezone.now())
     
     
     def __str__(self):
