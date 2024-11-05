@@ -31,4 +31,5 @@ urlpatterns = [
     path('', home_redirect, name='home'),
     path('tasks/', include('tasks.urls')),
     path('accounts/', include('allauth.urls')),
+    path('api/', include('tasks.api_urls')),  # Include API URLs from tasks
 ]
