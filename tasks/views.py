@@ -8,6 +8,7 @@ from django.db.models.functions import TruncMonth
 from django.contrib.auth.decorators import login_required
 from datetime import datetime
 import logging
+from rest_framework import viewsets
 
 logger = logging.getLogger('tasks')
 
