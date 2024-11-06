@@ -1,7 +1,7 @@
 from django.test import TestCase
 from django.urls import reverse
 from django.utils import timezone
-from .models import Task, CompletedTaskHistory
+from ..models import Task, CompletedTaskHistory
 from django.contrib.auth.models import User
 
 # Create your tests here.
