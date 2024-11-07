@@ -41,7 +41,12 @@ class TaskCreateView(APIView):
 
 
     def post(self, request):
-        try:   
+        try:
+            # Check if 'importance' is in request data
+            if 'importance' not in request.data:
+                logger.warning(f"Missing 'importance' field for task creation by user: {request.user.username}")
+                return Response({"error": "Importance level is required"}, status=status.HTTP_400_BAD_REQUEST)
+               
             serializer = TaskSerializer(data=request.data)
             if serializer.is_valid():
                 serializer.save(user=request.user)  # Associate the task with the logged-in user
@@ -117,39 +122,42 @@ class CompletedTaskHistoryView(APIView):
         month = request.query_params.get('month')
         year = request.query_params.get('year')
         
-        logger.info(f"Received request for completed tasks by user {request.user.username}"
-                    f"with filters: Month - {month}, Year - {year}")
+        logger.info(f"Received request for completed tasks by user {request.user.username} with filters: Month - {month}, Year - {year}")
+
+        # Begin validation and parsing
         try:
-            if month and not (1 <= month <= 12):
-                raise ValidationError(f"Invalid month parameters: {month}")
-            
-            if year and len(year) > 4 or not year.isdigit():
-                raise ValidationError(f"Invalid year parameters: {year}")
-        
-        except ValidationError as ve:
-            logger.warning(f"Validation error in completed task history for user: {request.user.username}: {str(ve)}")
-            return Response({"error": "validation error"}, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            logger.error(f"Unexpected error validation parameters for user: {request.user.username}: {str(e)}")
-            return Response({"error": "invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
-                
-        try:
-            
-            completed_tasks = CompletedTaskHistory.objects.filter(task__user = request.user)
+            if month:
+                month = int(month)
+                if not (1 <= month <= 12):
+                    raise ValidationError(f"Invalid month parameter: {month}")
             
             if year:
-                completed_tasks = completed_tasks.filter(completed_date__year = year)
+                if not year.isdigit() or len(year) != 4:
+                    raise ValidationError(f"Invalid year parameter: {year}")
+                year = int(year)
+
+        except ValidationError as ve:
+            logger.warning(f"Validation error in completed task history for user: {request.user.username}: {str(ve)}")
+            return Response({"error": str(ve)}, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            logger.error(f"Unexpected error validating parameters for user: {request.user.username}: {str(e)}")
+            return Response({"error": "Invalid parameters"}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            completed_tasks = CompletedTaskHistory.objects.filter(task__user=request.user)
+
+            if year:
+                completed_tasks = completed_tasks.filter(completed_date__year=year)
             if month:
-                completed_tasks = completed_tasks.filter(completed_date__month = month)
-            
+                completed_tasks = completed_tasks.filter(completed_date__month=month)
+
             if not completed_tasks.exists():
-                logger.warning(f"No completed tasks found of user: {request.user.username}"
-                               f"With filters: Month - {month}, year - {year}")
-                
+                logger.warning(f"No completed tasks found for user: {request.user.username} with filters: Month - {month}, Year - {year}")
+
             serializer = CompletedTaskHistorySerializer(completed_tasks, many=True)
             logger.info(f"Returned {completed_tasks.count()} completed tasks for user: {request.user.username}")
             return Response(serializer.data, status=status.HTTP_200_OK)
         
         except Exception as e:
             logger.error(f"Unexpected error retrieving completed tasks for user: {request.user.username}: {str(e)}")
-            return Response({"error": "an error occurred while retrieving completed tasks"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            return Response({"error": "An error occurred while retrieving completed tasks"}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

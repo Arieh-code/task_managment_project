@@ -1,4 +1,5 @@
 from django.db import models
+from django.forms import ValidationError
 from django.utils import timezone
 from django.conf import settings
 import logging
@@ -29,29 +30,38 @@ class Task(models.Model):
     end_date = models.DateTimeField(blank=True, null=True)
     
     
-    
-    def save(self, *args, **kwargs):
-        # Check if task completion status has changed
-        
-        creating_history = not self.pk or (Task.objects.filter(pk=self.pk).first().completed != self.completed)
 
-        # automatically set end date based on the importance if not specified
+    def save(self, *args, **kwargs):
+        # Check if task completion status has changed from the last saved state
+        creating_history = self.pk is None or (not self.completed and self.completed)
+
+        # Define the automatic end dates based on importance
+        importance_days = {
+            'Low': 30,
+            'Medium': 14,
+            'Urgent': 3
+        }
+        
+        # Automatically set end date based on importance if not specified
         if not self.end_date:
-            if self.importance == 'Low':
-                self.end_date = timezone.now() + timezone.timedelta(days=30)
-                logger.debug(f"Set end date to {self.end_date} for low priority task.")
-            elif self.importance =='Medium':
-                self.end_date = timezone.now() + timezone.timedelta(days=14)
-                logger.debug(f"Set end date to {self.end_date} for medium priority task.")
-            elif self.importance == 'Urgent':
-                self.end_date = timezone.now() + timezone.timedelta(days=3)
-                logger.debug(f"Set end date to {self.end_date} for high priority task.")
+            days_to_add = importance_days.get(self.importance)
+            if days_to_add:
+                self.end_date = timezone.now() + timezone.timedelta(days=days_to_add)
+                logger.debug(f"Set end date to {self.end_date} for {self.importance} priority task.")
+            else:
+                raise ValidationError("Invalid importance level")
         
         logger.info(f"Saving task '{self.title}' with end date set to: {self.end_date}")
+        
+        # Save the task model instance
         super().save(*args, **kwargs)
-         # If completion status changed to True, create history
+        
+        # Create history record if task has been marked as complete
         if creating_history and self.completed:
             CompletedTaskHistory.objects.get_or_create(task=self, completed_date=timezone.now())
+            logger.info(f"Completed task history created for '{self.title}'.")
+
+
     
     
     def __str__(self):
