@@ -1,0 +1,6 @@
+<!-- tasks/templates/tasks/profile_setup.html -->
+<h1>Set Up Your Profile</h1>
+<form method="post">
+  {% csrf_token %} {{ form.as_p }}
+  <button type="submit">Save Profile</button>
+</form>

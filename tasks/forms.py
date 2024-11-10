@@ -1,5 +1,6 @@
 from django import forms
 from .models import Task
+from django.contrib.auth.models import User
 
 class TaskForm(forms.ModelForm):
     class Meta:
@@ -13,3 +14,10 @@ class TaskForm(forms.ModelForm):
         widget=forms.SelectDateWidget,
         help_text="Leave empty to auto assign based on importance level"
     )
+
+
+
+class ProfileSetupForm(forms.ModelForm):
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name"]

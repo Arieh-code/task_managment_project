@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from .models import Task, CompletedTaskHistory
-from .forms import TaskForm 
+from .forms import ProfileSetupForm, TaskForm 
 from django.utils import timezone
 from django.db.models import Count, F
 from django.db.models.functions import TruncMonth
@@ -151,8 +151,26 @@ def completed_task_history(request):
         'importance' : importance, 
         'selected_importance' : selected_importance
         })
+    
+@login_required
+def profile_setup(request):
+    if request.method == "POST":
+        form = ProfileSetupForm(request.POST, instance=request.user)
+        if form.is_valid():
+            user = form.save(commit=False)
+            # Combine first and last names to set the username
+            user.username = f"{user.first_name}{user.last_name}".replace(" ", "").lower()
+            user.save()
+            return redirect("home")  # Redirect to homepage or dashboard
+    else:
+        form = ProfileSetupForm(instance=request.user)
+
+    return render(request, "tasks/profile_setup.html", {"form": form})
 
 def get_user_task(user, pk=None):
     if pk:
         return get_object_or_404(Task, pk=pk, user=user)
     return Task.objects.filter(user=user)
+
+
+

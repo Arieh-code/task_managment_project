@@ -7,7 +7,7 @@
   </head>
   <body>
     <h1>Tasks</h1>
-    <p>Current User ID: {{ request.user.username }}</p>
+    <p>Current user: {{ request.user.username }}</p>
     <a href="{% url 'task_create' %}">Create New Task</a>
     <br />
     <a href="{% url 'completed_task_history' %}">View Completed Task History</a>
