@@ -20,16 +20,10 @@ from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
 
 # Redirect view for the root URL
-def home_redirect(request):
-    if request.user.is_authenticated:
-        return redirect('task_list')
-    else:
-        return redirect('account_login')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', home_redirect, name='home'),
-    path('tasks/', include('tasks.urls')),
-    path('accounts/', include('allauth.urls')),
     path('api/', include('tasks.api_urls')),  # Include API URLs from tasks
+    path('auth/', include('dj_rest_auth.urls')),
+    path('auth/registration/', include('dj_rest_auth.registration.urls')),
 ]
